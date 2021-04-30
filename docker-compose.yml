@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  redis:
+    image: 'bitnami/redis:6.0'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6379
+
+  redis-master:
+    image: 'bitnami/redis:6.0'
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=secret
+    ports:
+      - 6379
+
+  redis-slave:
+    image: 'bitnami/redis:6.0'
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PASSWORD=secret
+      - REDIS_PASSWORD=secret
+    ports:
+      - 6379
+    depends_on:
+      - redis-master
+
+  redis-sentinel:
+    image: 'bitnami/redis-sentinel:6.0'
+    environment:
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PASSWORD=secret
+      - REDIS_MASTER_SET=lms
+    ports:
+      - 26379-26381:26379
+    depends_on:
+      - redis-master
+      - redis-slave
